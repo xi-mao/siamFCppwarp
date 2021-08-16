@@ -136,7 +136,7 @@ torch::Tensor testpt::xyxy2cxywh(torch::Tensor box) {
      box=box[0];
 
       std::cout<<box.sizes()<<std::endl;
-    torch::Tensor t0=  box.narrow(1,0,1);  //0维 第0 开始 取一个
+    torch::Tensor t0=  box.narrow(1,0,1);  //1维 第0 开始 取一排
     std::cout<<"t0 sizes"<<t0.sizes()<<std::endl;
     torch::Tensor t1=  box.narrow(1,1,1);
      std::cout<<"t1 sizes"<<t1.sizes()<<std::endl;

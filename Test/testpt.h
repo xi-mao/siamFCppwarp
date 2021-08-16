@@ -47,7 +47,7 @@ protected:
    float TRACK_LR;
 
    cv::Rect bounding_box;
-std::list<double> target_pos, target_sz
+std::list<double> target_pos, target_sz;
 
    // TODO: What are these?
    cv::Scalar channel_average;
