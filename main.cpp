@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     testpt testp;
 
     testp.testpt_load("siamfcpp_features_cpu.pt",torch::DeviceType::CPU);
-   testp.testpt_loadtrack("siamfcpp_track_cpu.pt",torch::DeviceType::CPU);
+  // testp.testpt_loadtrack("siamfcpp_track_cpu.pt",torch::DeviceType::CPU);
 
 //siamfcpp siampp("siamfcpp.pt",torch::DeviceType::CPU);
 

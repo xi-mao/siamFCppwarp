@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+﻿cmake_minimum_required(VERSION 3.14)
 
 project(siamFCppwarp LANGUAGES CXX)
 
@@ -23,7 +23,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
 #    endif()
 #endif()
+if(CMAKE_BUILD_TYPE MATCHES "release")
+   set(Torch_DIR   D:/environment/libtorch-win-shared-with-deps-1.9.0+cpu/libtorch/)
 
+ ELSEif(CMAKE_BUILD_TYPE MATCHES "Debug")
+      set(Torch_DIR  D:/environment/libtorch-win-shared-with-deps-debug-1.9.0+cpu/libtorch/)
+        endif()
+
+message(STATUS "Torch_Dir : ${Torch_Dir}")
+message(STATUS "CMAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick REQUIRED)
 find_package(Torch REQUIRED)
