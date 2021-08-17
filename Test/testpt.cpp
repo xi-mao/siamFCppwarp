@@ -157,11 +157,11 @@ std::vector<float>  testpt::xywh2cxywh(cv::Rect roi){  //box_wh
   std::vector<float> list={  x0 +( x2 - 1) / 2, x1 +
                            (x3 - 1) / 2, x2, x3
                        };
-    target_pos.push_back( x0 +( x2 - 1) / 2);
-    target_pos.push_back(  (x3 - 1) / 2);
+    target_pos.push_back( list[0]);
+    target_pos.push_back( list[1]);
 
-    target_sz.push_back( x2);
-    target_sz.push_back( x3);
+    target_sz.push_back( list[2]);
+    target_sz.push_back( list[3]);
     std::cout<<"xywh2cxywh"<<list<<std::endl;
     return list;
 
@@ -178,6 +178,7 @@ void testpt::testpt_load( QString path,torch::DeviceType dvic){
   //输入图像
     cv::Mat image = cv::imread("00001.jpg");
  cv::Rect roi=   cv::selectROI("nn",image);
+ std::cout<<"roi"<<roi<<std::endl;
  xywh2cxywh(roi);//# bbox in xywh format is given for initialization in case of tracking
  bounding_box = roi;
  channel_average = cv::mean(image);
@@ -195,7 +196,13 @@ std::cout<<output.size()<<std::endl;
 */
 float scale=0;
 cv::Mat im_z_crop= get_crop(image,target_pos,target_sz,z_size,0,scale,channel_average,context_amount);
- //output = model.forward({im_z_crop}).toTensorList();
+
+  torch::Tensor te=         Mat2tensor(im_z_crop);
+
+  std::cout<<"Mat2tensor"<<te.sizes()<<std::endl;
+
+ output = model.forward({te}).toTensorList();
+  std::cout<<"features"<<output.size()<<std::endl;
 }
 
 
@@ -475,3 +482,13 @@ cv::Mat testpt::tensor2Mat(torch::Tensor &i_tensor)
     return o_Mat;
 }
 
+torch::Tensor testpt::Mat2tensor(cv::Mat im){
+
+  torch::Tensor ts=  torch::from_blob(
+            im.data,
+            { 1, im.rows, im.cols, 3 },
+            torch::TensorOptions(torch::kByte)
+        ).permute({ 0, 3, 1, 2 }).toType(torch::kFloat);
+  ts=ts/255;
+  return ts;
+}

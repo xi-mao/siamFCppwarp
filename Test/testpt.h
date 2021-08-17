@@ -40,7 +40,7 @@ cv::Mat get_subwindow_tracking(cv::Mat im,
                               );
  torch::Tensor cxywh2xyxy( torch::Tensor crop_cxywh );
  cv::Mat tensor_to_imarray(torch::Tensor out_tensor,int img_h,int img_w);
-
+torch::Tensor Mat2tensor(cv::Mat im);
 cv::Mat tensor2Mat(torch::Tensor &i_tensor);
 protected:
    static const float CONTEXT_AMOUNT;
