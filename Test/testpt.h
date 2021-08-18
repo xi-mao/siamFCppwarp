@@ -16,15 +16,54 @@ class testpt:public QObject
 public:
     testpt(QObject *parent=nullptr);
     ~testpt();
-torch::List<torch::Tensor>  output;
-   void testpt_load( QString path,torch::DeviceType dvic);
-   void testpt_loadtrack( QString path,torch::DeviceType dvic);
+    //tracking model
+     torch::jit::script::Module trackmodel;
+
+    //ini value
+     std::vector<float> target_pos, target_sz;
+
+torch::List<torch::Tensor>  features;
+cv::Mat  im_z_crop;
+   cv::Scalar avg_chans;
+   //device
+    torch::DeviceType dvic;
+
+
+   void ini( cv::Mat frame,cv::Rect roi, torch::DeviceType dvic);
+   cv::Rect update( cv::Mat frame);
+
+cv::Rect track( cv::Mat frame,std::vector<float> target_pos1,
+            std::vector<float> target_sz1,
+            torch::List<torch::Tensor> features,
+            bool   update_state=true );
+  std::vector<torch::Tensor> postprocess_score( torch::Tensor score,
+                          torch::Tensor box_wh,
+                          std::vector<float> target_sz1,
+                          float scale_x
+                          );
+cv::Rect  restrict_box(cv::Rect tragrect);
+torch::Tensor hann_window(int window_length,torch::DeviceType dev=torch::DeviceType::CPU);
+  cv::Rect postprocess_box(int best_pscore_id,
+                                   torch::Tensor score,
+                                   torch::Tensor box_wh,
+                                    std::vector<float> target_pos1,
+                                    std::vector<float> target_sz1,
+                                    float scale_x,
+                                   float x_size,
+                                    torch::Tensor penalty
+                                   );
+  torch::Tensor testpt::change(torch::Tensor r);
+
+
+  torch::Tensor testpt::sz(torch::Tensor w,torch::Tensor h);
+
+  torch::Tensor testpt::sz_wh(torch::Tensor wh);
 
    torch::Tensor get_subwindow(cv::Mat frame, int exampler_size, int original_size) ;
 int calculate_s_z();
 torch::Tensor convert_bbox(torch::Tensor loc) ;
 
-
+cv::Rect cxywh2xywh(cv::Rect roi) ;
 torch::Tensor xyxy2cxywh(torch::Tensor box) ;
 //void  postprocess_score();
 
@@ -38,9 +77,12 @@ cv::Mat get_subwindow_tracking(cv::Mat im,
                              float  original_sz,
                               cv::Scalar avg_chans={0.0,0.0, 0.0, 0.0}
                               );
+std::vector<float> xywh2xyxy(cv::Rect roi );
  torch::Tensor cxywh2xyxy( torch::Tensor crop_cxywh );
  cv::Mat tensor_to_imarray(torch::Tensor out_tensor,int img_h,int img_w);
 torch::Tensor Mat2tensor(cv::Mat im);
+torch::Tensor Matarr2tensor(cv::Mat im);
+torch::Tensor diagnoal(cv::Mat m);
 cv::Mat tensor2Mat(torch::Tensor &i_tensor);
 protected:
    static const float CONTEXT_AMOUNT;
@@ -79,13 +121,15 @@ protected:
    float TRACK_LR;
 
    cv::Rect bounding_box;
-std::vector<float> target_pos, target_sz;
+
 
    // TODO: What are these?
-   cv::Scalar channel_average;
+
    torch::List<torch::Tensor> zf;
    torch::Tensor anchors;
    torch::Tensor window;
+   int  im_w;
+  int im_h;
 };
 
 #endif // TESTPT_H
