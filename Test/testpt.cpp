@@ -117,15 +117,15 @@ torch::Tensor testpt::xyxy2cxywh(torch::Tensor box) {
     std::cout<<box.sizes()<<std::endl;
 
 
-      std::cout<<box.sizes()<<std::endl;
+   //   std::cout<<box.sizes()<<std::endl;
     torch::Tensor t0=  box.narrow(1,0,1);  //1维 第0 开始 取一排
-    std::cout<<"t0 sizes"<<t0.sizes()<<std::endl;
+   // std::cout<<"t0 sizes"<<t0.sizes()<<std::endl;
     torch::Tensor t1=  box.narrow(1,1,1);
-     std::cout<<"t1 sizes"<<t1.sizes()<<std::endl;
+   //  std::cout<<"t1 sizes"<<t1.sizes()<<std::endl;
     torch::Tensor t2=  box.narrow(1,2,1);
-    std::cout<<"t2 sizes"<<t2.sizes()<<std::endl;
+  //  std::cout<<"t2 sizes"<<t2.sizes()<<std::endl;
     torch::Tensor t3= box.narrow(1,3,1);
-    std::cout<<"t3 sizes"<<t3.sizes()<<std::endl;
+ //   std::cout<<"t3 sizes"<<t3.sizes()<<std::endl;
 
 
 
@@ -133,7 +133,7 @@ torch::Tensor t=  torch::cat({ (t0 +t2) / 2,
                                (t1 + t3) / 2,
                                t2 -t0 + 1,
                               t3 - t1 + 1},-1);
-std::cout<<"t sizes"<<t.sizes()<<std::endl;
+//std::cout<<"t sizes"<<t.sizes()<<std::endl;
 return t;
 
 
@@ -178,7 +178,7 @@ std::vector<float>  testpt::xywh2cxywh(cv::Rect roi){  //box_wh
 
     target_sz.push_back( list[2]);
     target_sz.push_back( list[3]);
-    std::cout<<"xywh2cxywh"<<list<<std::endl;
+    //std::cout<<"xywh2cxywh"<<list<<std::endl;
     return list;
 
 
@@ -205,23 +205,19 @@ im_h=frame.rows;
             window = window.reshape(-1)
             */
 
-  std::cout<<"avg_chans"<<avg_chans<<std::endl;
+ // std::cout<<"avg_chans"<<avg_chans<<std::endl;
 
- //cv::Mat han;
-// cv::createHanningWindow(han,cv::Size(17,17),CV_32F);
-// std::cout<<"han"<<han<<std::endl;
 
-//torch::Tensor hann_window= diagnoal(han);
-//  std::cout<<"ten_han"<<hann_window<<std::endl;
+
+
 torch::Tensor hannwindow = hann_window(score_size);
- std::cout<<"ten_han"<<hannwindow<<std::endl;
- // torch::Tensor hann_window= torch::hann_window(score_size,false);
-  //std::cout<<"hann_window"<<hann_window.sizes()<<std::endl;
+ //std::cout<<"ten_han"<<hannwindow<<std::endl;
+
 window=torch::outer(hannwindow,hannwindow);
 window=window.reshape(-1);
-std::cout<<"window"<<window<<std::endl;
+//std::cout<<"window"<<window<<std::endl;
  int Sz=calculate_s_z();
-std::cout<<Sz<<std::endl;
+//std::cout<<Sz<<std::endl;
 /*
 torch::Tensor z_crop= get_subwindow(image,z_size,Sz);
 
@@ -235,11 +231,11 @@ float scale=0;
  im_z_crop= get_crop(frame,target_pos,target_sz,z_size,0,scale,avg_chans,context_amount);
 
   torch::Tensor te=         Mat2tensor(im_z_crop);
-
+//std::cout<<"te.sizes"<<te.sizes()<<std::endl;
 
 
  features = model.forward({te}).toTensorList();
-
+//std::cout<<"features"<<features.size()<<std::endl;
 
 
 
@@ -261,7 +257,7 @@ if(i>=m.cols)
 
     }
         torch::Tensor t=torch::tensor(diagv);
-        std::cout<<"t"<<t<<std::endl;
+      //  std::cout<<"t"<<t<<std::endl;
         return t;
 
 }
@@ -289,19 +285,20 @@ return track(frame,target_pos_prior,target_sz_prior,features);
 
 cv::Rect testpt::track( cv::Mat frame,std::vector<float> target_pos1,
             std::vector<float> target_sz1,
-            torch::List<torch::Tensor> features,
+            torch::List<torch::Tensor>  features,
             bool   update_state ){
 float scale_x=0;
 cv::Mat im_x_crop= get_crop(frame,target_pos1,target_sz1,z_size,x_size,scale_x,avg_chans,context_amount).clone();
   torch::Tensor te=         Mat2tensor(im_x_crop);
 
+std::cout<<"featuressize "<<features.size()<<std::endl;
   torch::Tensor features1=features[0];
-
+// std::cout<<"features1 "<<features1<<std::endl;
    torch::Tensor features2=features[1];
-
+// std::cout<<"features1 "<<features2<<std::endl;
    std::vector<torch::IValue> output = trackmodel.forward({te,features1,features2}).toTuple()->elements();
 
-   std::cout<<output.size()<<std::endl;
+   //std::cout<<output.size()<<std::endl;
 
 
 
@@ -309,13 +306,13 @@ cv::Mat im_x_crop= get_crop(frame,target_pos1,target_sz1,z_size,x_size,scale_x,a
 
 
             torch::Tensor score=  output[0].toTensor().select(0,0).squeeze();
-             std::cout<<"score sizes "<<score.sizes()<<std::endl;
+             std::cout<<"score sizes "<<score<<std::endl;
             torch::Tensor box=    output[1].toTensor().select(0,0);
-             std::cout<<"box sizes "<<box.sizes()<<std::endl;
+            // std::cout<<"box sizes "<<box.sizes()<<std::endl;
              torch::Tensor cls=   output[2].toTensor().select(0,0);
-              std::cout<<"cls sizes "<<cls.sizes()<<std::endl;
+            //  std::cout<<"cls sizes "<<cls.sizes()<<std::endl;
              torch::Tensor ctr=   output[3].toTensor().select(0,0);
-            std::cout<<"ctr sizes "<<ctr.sizes()<<std::endl;
+          //  std::cout<<"ctr sizes "<<ctr.sizes()<<std::endl;
              torch::Tensor box_wh=   xyxy2cxywh(box);
 
 
@@ -337,10 +334,12 @@ std::vector< torch::Tensor> rv=postprocess_score(
             score,box_wh,target_sz,scale_x
             );
 best_pscore_id=rv[0];
+int best_id=best_pscore_id.item<int>();
 pscore=rv[1];
 penalty=rv[2];
-cv::Rect rc= postprocess_box(best_pscore_id.item<int>(),score,box_wh,target_pos1,target_sz1,scale_x,x_size,penalty);
-
+cv::Rect rc= postprocess_box(best_id,score,box_wh,target_pos1,target_sz1,scale_x,x_size,penalty);
+std::cout<<"bestid "<<best_id<<std::endl;
+std::cout<<"rc "<<rc<<std::endl;
 rc=restrict_box(rc);
 //update state
 target_pos[0]=rc.x;
@@ -557,7 +556,7 @@ float M_22 = ((crop_xyxy[3] - M_23) / (model_sz - 1)).item<float>();
 std::vector<float> ten={M_11,0,M_13,0,M_22,
                                 M_23};
 torch::Tensor mat2x3 =torch::tensor(ten).reshape({2,3});
-std::cout<<"mat2x3"<<mat2x3<<std::endl;
+//std::cout<<"mat2x3"<<mat2x3<<std::endl;
 cv::Mat im_patch ;
 cv::warpAffine(im,im_patch,
                         tensor2Mat(mat2x3) , cv::Size(model_sz, model_sz),
@@ -578,8 +577,8 @@ torch::Tensor testpt::cxywh2xyxy( torch::Tensor box ){
                               axis=-1)
             */
 
-    std::cout<<"cxywh2xyxy box"<<box.sizes()<<std::endl;
-    // box=box[1];
+  //  std::cout<<"cxywh2xyxy box"<<box.sizes()<<std::endl;
+
 /*
       std::cout<<box.sizes()<<std::endl;
     torch::Tensor t0=  box.select(0,0);  //1维 第0 开始 取一排
@@ -612,7 +611,7 @@ torch::Tensor x0=t2 - 1;
 
 
 torch::Tensor tt=torch::tensor(t);
-    std::cout<<"tt "<<tt<<std::endl;
+  //  std::cout<<"tt "<<tt<<std::endl;
 
     return tt;
 
@@ -687,7 +686,7 @@ torch::Tensor testpt::Mat2tensor(cv::Mat im){
             { 1, im.rows, im.cols, im.channels() },
             torch::TensorOptions(torch::kByte)
         ).permute({ 0, 3, 1, 2 }).toType(torch::kFloat);
-  ts=ts/255;
+
   return ts;
 }
 
@@ -698,7 +697,7 @@ torch::Tensor testpt::Matarr2tensor(cv::Mat im){
             {  im.rows, im.cols},
             torch::TensorOptions(torch::kByte)
         ).toType(torch::kFloat);
-  ts=ts/255;
+
   return ts;
 }
 torch::Tensor testpt::change(torch::Tensor r){

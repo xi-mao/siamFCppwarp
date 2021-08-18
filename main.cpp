@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   //  testp.ini(image,roi, torch::DeviceType::CPU);
 
 
- cv::VideoCapture   vs = cv::VideoCapture("../video/bag.avi");
+ cv::VideoCapture   vs = cv::VideoCapture("../video/video.avi");
 
   bool  frst = true;
   cv::Mat frame ;
@@ -37,22 +37,22 @@ int main(int argc, char *argv[])
 
 
             if (frst) {
-               // cv::Rect box = cv::selectROI("window_name",
-                 //                   frame
+                cv::Rect box = cv::selectROI("window_name",
+                                    frame
 
-                //                    );
-               cv::Rect box(313,135,109,123);
+                                    );
+             //  cv::Rect box(313,135,109,123);
                 cv::putText(frame,
                             "", cv::Point(128, 20),
                             cv::FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255),
-                            1);
+                            3);
                 cv::rectangle(frame, box,
-                              cv::Scalar(0, 255, 0));
+                             cv::Scalar(0, 0,255),4);
 
                 cv::imshow("window_name", frame);
                 cv::waitKey(1);
-               std::cout<<"Roi  "<<box<<std::endl;
-               cv::imwrite("ini.jpg",frame);
+
+
                 testp.ini(frame, box, torch::DeviceType::CPU);
 
                 frst= false;
@@ -67,17 +67,19 @@ int main(int argc, char *argv[])
 
                 cv::putText(show_frame,
                             "", cv::Point(128, 20),
-                            cv::FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255),
-                            1);
+                            cv::FONT_HERSHEY_COMPLEX, 2.5, (0, 0, 255),
+                            3);
 
-                 std::cout<<"roi  "<<roi<<std::endl;
+                // std::cout<<"roi  "<<roi<<std::endl;
                 cv::rectangle(show_frame, roi ,
-                              cv::Scalar(0, 255, 0));
+                              cv::Scalar(0, 255,0),3);
 
 
 
                 cv::imshow("window_name2", show_frame);
                 cv::waitKey(1);
+
+              //  break ;
             }
     }
 

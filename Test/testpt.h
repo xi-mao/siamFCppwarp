@@ -34,7 +34,7 @@ cv::Mat  im_z_crop;
 
 cv::Rect track( cv::Mat frame,std::vector<float> target_pos1,
             std::vector<float> target_sz1,
-            torch::List<torch::Tensor> features,
+           torch::List<torch::Tensor> features,
             bool   update_state=true );
   std::vector<torch::Tensor> postprocess_score( torch::Tensor score,
                           torch::Tensor box_wh,
