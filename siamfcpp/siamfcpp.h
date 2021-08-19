@@ -59,7 +59,7 @@ torch::Tensor hann_window(int window_length,torch::DeviceType dev=torch::DeviceT
 
   torch::Tensor sz_wh(torch::Tensor wh);
 
-   torch::Tensor get_subwindow(cv::Mat frame, int exampler_size, int original_size) ;
+
 int calculate_s_z();
 torch::Tensor convert_bbox(torch::Tensor loc) ;
 
@@ -85,16 +85,6 @@ torch::Tensor Mat2tensor(cv::Mat im);
 //torch::Tensor diagnoal(cv::Mat m);
 cv::Mat tensor2Mat(torch::Tensor &i_tensor);
 protected:
-   static const float CONTEXT_AMOUNT;
-   static const int EXEMPLAR_SIZE = 127;
-   static const int INSTANCE_SIZE = 303;
-   static const int ANCHOR_STRIDE = 8;
-   static const int ANCHOR_RATIOS_NUM = 5;
-   static const float ANCHOR_RATIOS[ANCHOR_RATIOS_NUM];
-   static const int ANCHOR_SCALES_NUM = 1;
-   static const float ANCHOR_SCALES[ANCHOR_SCALES_NUM];
-   static const int TRACK_BASE_SIZE = 8;
-   static const int SCORE_SIZE = (INSTANCE_SIZE - EXEMPLAR_SIZE) / ANCHOR_STRIDE + 1 + TRACK_BASE_SIZE;
 
 
          static const int     total_stride=8;
@@ -116,9 +106,7 @@ protected:
 
 
 
-   float TRACK_PENALTY_K;
-   float TRACK_WINDOW_INFLUENCE;
-   float TRACK_LR;
+
 
    cv::Rect bounding_box;
 

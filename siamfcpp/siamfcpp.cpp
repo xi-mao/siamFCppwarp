@@ -1,7 +1,4 @@
 ﻿#include "siamfcpp.h"
-const float siamfcpp::CONTEXT_AMOUNT = 0.5f;
-const float siamfcpp::ANCHOR_RATIOS[siamfcpp::ANCHOR_RATIOS_NUM] = { 0.33, 0.5, 1, 2, 3 };
-const float siamfcpp::ANCHOR_SCALES[siamfcpp::ANCHOR_SCALES_NUM] = { 8 };
 
 const std::string  siamfcpp::windowing("cosine");
 const float siamfcpp::context_amount=0.5;
@@ -33,63 +30,9 @@ siamfcpp::~siamfcpp(){
 // TODO: What is this?
 int siamfcpp::calculate_s_z() {
     float bb_half_perimeter = bounding_box.width + bounding_box.height;
-    float w_z = bounding_box.width + CONTEXT_AMOUNT * bb_half_perimeter;
-    float h_z = bounding_box.height + CONTEXT_AMOUNT * bb_half_perimeter;
+    float w_z = bounding_box.width + context_amount * bb_half_perimeter;
+    float h_z = bounding_box.height + context_amount * bb_half_perimeter;
     return round(sqrt(w_z * h_z));
-}
-torch::Tensor siamfcpp::get_subwindow(cv::Mat frame, int exampler_size, int original_size) {
-    cv::Size frame_size = frame.size();
-
-    // TODO: What are these?
-    float s_z = original_size;
-    float c = (s_z + 1) / 2;
-
-    float context_xmin = floor((bounding_box.x + bounding_box.width / 2) - c + 0.5);
-    float context_xmax = context_xmin + s_z - 1;
-    float context_ymin = floor((bounding_box.y + bounding_box.height / 2) - c + 0.5);
-    float context_ymax = context_ymin + s_z - 1;
-
-    int left_pad = std::max(0.f, -context_xmin);
-    int top_pad = std::max(0.f, -context_ymin);
-    int right_pad = std::max(0.f, context_xmax - frame_size.width + 1);
-    int bottom_pad = std::max(0.f, context_ymax - frame_size.height + 1);
-
-    context_xmin += left_pad;
-    context_xmax += left_pad;
-    context_ymin += top_pad;
-    context_ymax += top_pad;
-
-    cv::Mat frame_patch(context_ymax - context_ymin + 1, context_xmax - context_xmin + 1, frame.type());
-    if (left_pad || top_pad || right_pad || bottom_pad) {
-        cv::Mat padded_frame(frame.rows + top_pad + bottom_pad, frame.cols + left_pad + right_pad, frame.type());
-        frame.copyTo(padded_frame(cv::Rect(left_pad, top_pad, frame.cols, frame.rows)));
-        if (top_pad) {
-            padded_frame(cv::Rect(left_pad, 0, frame_size.width, top_pad)).setTo(avg_chans);
-        }
-        if (bottom_pad) {
-            padded_frame(cv::Rect(left_pad, top_pad + frame_size.height, frame_size.width, bottom_pad)).setTo(avg_chans);
-        }
-        if (left_pad) {
-            padded_frame(cv::Rect(0, 0, left_pad, padded_frame.rows)).setTo(avg_chans);
-        }
-        if (right_pad) {
-            padded_frame(cv::Rect(left_pad + frame_size.width, 0, right_pad, padded_frame.rows)).setTo(avg_chans);
-        }
-        padded_frame(cv::Rect(context_xmin, context_ymin, frame_patch.cols, frame_patch.rows)).copyTo(frame_patch);
-    }
-    else {
-        frame(cv::Rect(context_xmin, context_ymin, frame_patch.cols, frame_patch.rows)).copyTo(frame_patch);
-    }
-
-    if (original_size != exampler_size) {
-        cv::resize(frame_patch, frame_patch, cv::Size(exampler_size, exampler_size));
-    }
-
-    return torch::from_blob(
-        frame_patch.data,
-        { 1, frame_patch.rows, frame_patch.cols, 3 },
-        torch::TensorOptions(torch::kByte)
-    ).permute({ 0, 3, 1, 2 }).toType(torch::kFloat);
 }
 
 
