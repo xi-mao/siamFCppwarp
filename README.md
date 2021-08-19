@@ -35,4 +35,3 @@ C++ Implementation siamfcpp  from [video_analyst:siamFcpp](https://github.com/Me
 
 
 
- Please set the proper CUDA prefixes and / or install CUDA. D:/code/py/SiamTrackers-master/venv2/Lib/site-packages/torch/share/cmake/Torch/TorchConfig.cmake:68 (find_package) CMakeLists.txt:7 (find_package)
