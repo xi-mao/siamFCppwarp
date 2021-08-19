@@ -10,13 +10,13 @@ siamfcpp::siamfcpp( torch::DeviceType dvic)
     dvc=dvic;
     if(dvc==torch::DeviceType::CPU)
     {
-      model= torch::jit::load( "../model/siamfcpp_features_cpu.pt");
-      trackmodel= torch::jit::load( "../model/siamfcpp_track_cpu.pt");
+      model= torch::jit::load( "../model/siamfcpp_fcpu.pt");
+      trackmodel= torch::jit::load( "../model/siamfcpp_tcpu.pt");
     }
     else
     {
-      model= torch::jit::load( "../model/siamfcpp_features_cuda.pt");
-       trackmodel= torch::jit::load( "../model/siamfcpp_track_cuda.pt");
+      model= torch::jit::load( "../model/siamfcpp_fcuda.pt");
+       trackmodel= torch::jit::load( "../model/siamfcpp_tcuda.pt");
     }
 
       model.to(dvc);
@@ -241,17 +241,17 @@ cv::Rect siamfcpp::track( cv::Mat frame,std::vector<float> target_pos1,
             bool   update_state ){
 float scale_x=0;
 cv::Mat im_x_crop= get_crop(frame,target_pos1,target_sz1,z_size,x_size,scale_x,avg_chans,context_amount).clone();
-//std::cout<<"im_x_crop "<<im_x_crop.size()<<std::endl;
+
   torch::Tensor te=         Mat2tensor(im_x_crop);
 
-//std::cout<<"featuressize "<<features.size()<<std::endl;
+
   torch::Tensor features1=features[0];
-// std::cout<<"features1 "<<features1.sizes()<<std::endl;
+
    torch::Tensor features2=features[1];
-// std::cout<<"features1 "<<features2.sizes()<<std::endl;
+
    std::vector<torch::IValue> output = trackmodel.forward({te.to(dvc),features1.to(dvc),features2.to(dvc)}).toTuple()->elements();
 
-   //std::cout<<output.size()<<std::endl;
+
 
 
 
@@ -259,13 +259,13 @@ cv::Mat im_x_crop= get_crop(frame,target_pos1,target_sz1,z_size,x_size,scale_x,a
 
 
             torch::Tensor score=  output[0].toTensor().select(0,0).squeeze().to(dvc);
-         //    std::cout<<"score sizes "<<score<<std::endl;
+
             torch::Tensor box=    output[1].toTensor().select(0,0).to(dvc);
-            // std::cout<<"box sizes "<<box.sizes()<<std::endl;
+
              torch::Tensor cls=   output[2].toTensor().select(0,0).to(dvc);
-            //  std::cout<<"cls sizes "<<cls.sizes()<<std::endl;
+
              torch::Tensor ctr=   output[3].toTensor().select(0,0).to(dvc);
-          //  std::cout<<"ctr sizes "<<ctr.sizes()<<std::endl;
+
              torch::Tensor box_wh=   xyxy2cxywh(box.to(dvc));
 
 
