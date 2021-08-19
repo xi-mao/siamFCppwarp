@@ -1,9 +1,10 @@
-﻿#include <QGuiApplication>
-#include <QQmlApplicationEngine>
+﻿//#include <QGuiApplication>
+//#include <QQmlApplicationEngine>
 //#include<testpt.h>
 #include<siamfcpp.h>
 int main(int argc, char *argv[])
 {
+    /*
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
@@ -18,9 +19,9 @@ int main(int argc, char *argv[])
             QCoreApplication::exit(-1);
     }, Qt::QueuedConnection);
 
-
+*/
   //  testpt testp(nullptr,torch::DeviceType::CUDA);
-siamfcpp  siamfcpp(nullptr,torch::DeviceType::CUDA);
+siamfcpp  siamfcpp(torch::DeviceType::CPU);
 
 
  cv::VideoCapture   vs = cv::VideoCapture("../video/video.avi");
@@ -91,5 +92,5 @@ c++;
 
   std::cout<<"Pfps "<<fps_c/c<<std::endl;
  //engine.load(url);
-    return app.exec();
+  //  return app.exec();
 }

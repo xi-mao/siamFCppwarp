@@ -2,19 +2,19 @@
 #define SIAMFCPP_H
 
 #include<opencv2/opencv.hpp>
-#undef slots
+//#undef slots
 #include <torch/torch.h>
 #include<torch/script.h>
-#define slots Q_SLOTS
-#include <QObject>
-#include<QDebug>
+//#define slots Q_SLOTS
+//#include <QObject>
+//#include<QDebug>
 #include <cmath>
 
-class siamfcpp :public QObject
+class siamfcpp //:public QObject
 {
-    Q_OBJECT
+   // Q_OBJECT
 public:
-    siamfcpp(QObject *parent=nullptr, torch::DeviceType dvic=torch::DeviceType::CUDA);
+    siamfcpp( torch::DeviceType dvic=torch::DeviceType::CUDA);
     ~siamfcpp();
     //tracking model
      torch::jit::script::Module trackmodel;

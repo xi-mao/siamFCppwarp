@@ -8,7 +8,7 @@ const float siamfcpp::context_amount=0.5;
 const float siamfcpp::test_lr=0.52;
 const float siamfcpp::penalty_k=0.04;
 const float siamfcpp::window_influence=0.21;
-siamfcpp::siamfcpp(QObject *parent, torch::DeviceType dvic):QObject(parent)
+siamfcpp::siamfcpp( torch::DeviceType dvic)
 {
     dvc=dvic;
     if(dvc==torch::DeviceType::CPU)
