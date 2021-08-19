@@ -12,6 +12,8 @@ siamfcpp implement from [video_analyst:siamFcpp](https://github.com/MegviiDetect
 
 [GPU_implement](https://user-images.githubusercontent.com/51977158/130018412-2de16c33-b5a8-4e3e-974d-909031b1700d.mp4)
 
+#pre_model trans python-libtorch
+[baiduwangpan code:9m6d](https://pan.baidu.com/s/1Th7M6hQgGyKpe9u4ZpWxFA)
 
 #References 
 
