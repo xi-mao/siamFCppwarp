@@ -1,6 +1,6 @@
 ﻿#include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include<testpt.h>
+//#include<testpt.h>
 #include<siamfcpp.h>
 int main(int argc, char *argv[])
 {
@@ -19,10 +19,8 @@ int main(int argc, char *argv[])
     }, Qt::QueuedConnection);
 
 
-    testpt testp;
-   //   cv::Mat image = cv::imread("00001.jpg");
-   // cv::Rect roi=   cv::selectROI("nn",image);
-  //  testp.ini(image,roi, torch::DeviceType::CPU);
+  //  testpt testp(nullptr,torch::DeviceType::CUDA);
+siamfcpp  siamfcpp(nullptr,torch::DeviceType::CUDA);
 
 
  cv::VideoCapture   vs = cv::VideoCapture("../video/video.avi");
@@ -30,10 +28,13 @@ int main(int argc, char *argv[])
   bool  frst = true;
   cv::Mat frame ;
         // ;
+
+  float fps_c=0;
+    int c=0;
     while ( vs.read(frame)){
 
 
-
+c++;
 
 
             if (frst) {
@@ -42,35 +43,35 @@ int main(int argc, char *argv[])
 
                                     );
              //  cv::Rect box(313,135,109,123);
-                cv::putText(frame,
-                            "", cv::Point(128, 20),
-                            cv::FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255),
-                            3);
-                cv::rectangle(frame, box,
-                             cv::Scalar(0, 0,255),4);
-
-                cv::imshow("window_name", frame);
-                cv::waitKey(1);
 
 
-                testp.ini(frame, box, torch::DeviceType::CPU);
+
+
+
+
+
+                siamfcpp.ini(frame, box);
 
                 frst= false;
+
             }
             else{
-            cv::Rect roi=  testp.update(frame);
 
+                 int start =cv::getTickCount();
+
+                cv::Rect roi=  siamfcpp.update(frame);
+                int  end =cv::getTickCount();
                cv::Mat show_frame = frame.clone();
+                float cout=1/((end-start)/cv::getTickFrequency());
+                fps_c+=cout;
 
-               // bbox_pred = xywh2xyxy(rect_pred)
-               // bbox_pred = tuple(map(int, bbox_pred))
 
                 cv::putText(show_frame,
-                            "", cv::Point(128, 20),
-                            cv::FONT_HERSHEY_COMPLEX, 2.5, (0, 0, 255),
-                            3);
+                           "FPS "+ std::to_string( cout), cv::Point(128, 20),
+                            cv::FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255),
+                           1);
 
-                // std::cout<<"roi  "<<roi<<std::endl;
+
                 cv::rectangle(show_frame, roi ,
                               cv::Scalar(0, 255,0),3);
 
@@ -81,9 +82,14 @@ int main(int argc, char *argv[])
 
               //  break ;
             }
+
+
     }
 
 
- engine.load(url);
+
+
+  std::cout<<"Pfps "<<fps_c/c<<std::endl;
+ //engine.load(url);
     return app.exec();
 }

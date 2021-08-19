@@ -38,13 +38,16 @@ find_package(Torch REQUIRED)
 find_package(Opencv REQUIRED)
 
 include_directories(
-    Test
-    tool
+
     siamfcpp
     )
+
+#  Test
+# tool
+#"Test/*cpp"
+#"tool/*cpp"
 file(GLOB_RECURSE sourcefile
-    "Test/*cpp"
-"tool/*cpp"
+
 "siamfcpp/*cpp"
     )
 
