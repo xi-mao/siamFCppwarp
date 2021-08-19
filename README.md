@@ -1,5 +1,6 @@
  # siamFCppwarp
 C++ Implementation siamfcpp  from [video_analyst:siamFcpp](https://github.com/MegviiDetection/video_analyst)
+test on GTX1660 CUDA 11.1
 
 ## video sample
 1.CPU(FPS 13)
