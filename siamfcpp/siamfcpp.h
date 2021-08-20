@@ -28,28 +28,30 @@ cv::Mat  im_z_crop;
    //device
     torch::DeviceType dvc;
 
+    float pr_socres=0;
+
 
    void ini( cv::Mat frame,cv::Rect roi);
-   cv::Rect update( cv::Mat frame);
+   cv::Rect update( cv::Mat frame,float &scores);
 
 cv::Rect track( cv::Mat frame,std::vector<float> target_pos1,
             std::vector<float> target_sz1,
-           torch::List<torch::Tensor> features,
+           torch::List<torch::Tensor> features,float& scores,
             bool   update_state=true );
   std::vector<torch::Tensor> postprocess_score( torch::Tensor score,
                           torch::Tensor box_wh,
                           std::vector<float> target_sz1,
                           float scale_x
                           );
-cv::Rect  restrict_box(cv::Rect tragrect);
+std::vector<float> restrict_box(std::vector<float> tragrect);
 torch::Tensor hann_window(int window_length,torch::DeviceType dev=torch::DeviceType::CPU);
-  cv::Rect postprocess_box(int best_pscore_id,
+std::vector<float> postprocess_box(int best_pscore_id,
                                    torch::Tensor score,
                                    torch::Tensor box_wh,
                                     std::vector<float> target_pos1,
                                     std::vector<float> target_sz1,
                                     float scale_x,
-                                   float x_size,
+                                   float x_size1,
                                     torch::Tensor penalty
                                    );
   torch::Tensor change(torch::Tensor r);
@@ -63,13 +65,13 @@ torch::Tensor hann_window(int window_length,torch::DeviceType dev=torch::DeviceT
 int calculate_s_z();
 torch::Tensor convert_bbox(torch::Tensor loc) ;
 
-cv::Rect cxywh2xywh(cv::Rect roi) ;
+cv::Rect cxywh2xywh(std::vector<float> roi) ;
 torch::Tensor xyxy2cxywh(torch::Tensor box) ;
 //void  postprocess_score();
 
 std::vector<float>  xywh2cxywh(cv::Rect roi); //box_wh
 cv::Mat get_crop(cv::Mat im, std::vector<float> target_pos, std::vector<float> target_sz,
-                 const int z_size,const int x_size,float &scale,
+                 const int z_size1,const int x_size1,float &scale,
                  cv::Scalar avg_chans,float context_amount=0.5   );
 cv::Mat get_subwindow_tracking(cv::Mat im,
                                std::vector<float> pos,
@@ -96,13 +98,18 @@ protected:
            static const float window_influence;
       static const std::string    windowing;
        static const int   z_size=127;
-      static const int    x_size=303;
+
+
+       static const int    x_size=303;
         static const int  num_conv3x3=3;
       static const int   min_w=10;
        static const int   min_h=10;
      //    phase_init="feature",
       //   phase_track="track",
       //   corr_fea_output=False,
+
+       static const float AC_SCORE;//信分数
+
 
 
 

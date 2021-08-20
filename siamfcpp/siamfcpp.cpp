@@ -1,22 +1,31 @@
 ﻿#include "siamfcpp.h"
 
 const std::string  siamfcpp::windowing("cosine");
+/*
 const float siamfcpp::context_amount=0.5;
 const float siamfcpp::test_lr=0.52;
-const float siamfcpp::penalty_k=0.04;
+const float siamfcpp::penalty_k=0.08;
 const float siamfcpp::window_influence=0.21;
+const float siamfcpp::lossed_w=0.5;
+*/
+
+const float siamfcpp::context_amount=0.5;
+const float siamfcpp::test_lr=0.52;
+const float siamfcpp::penalty_k=0.08;
+const float siamfcpp::window_influence=0.21;
+const float siamfcpp::AC_SCORE=0.3;
 siamfcpp::siamfcpp( torch::DeviceType dvic)
 {
     dvc=dvic;
     if(dvc==torch::DeviceType::CPU)
     {
-      model= torch::jit::load( "../model/siamfcpp_fcpu.pt");
-      trackmodel= torch::jit::load( "../model/siamfcpp_tcpu.pt");
+      model= torch::jit::load( "../model/GOT/siamfcpp_fcpu.pt");
+      trackmodel= torch::jit::load( "../model/GOT/siamfcpp_tcpu.pt");
     }
     else
     {
-      model= torch::jit::load( "../model/siamfcpp_fcuda.pt");
-       trackmodel= torch::jit::load( "../model/siamfcpp_tcuda.pt");
+      model= torch::jit::load( "../model/VOT/siamfcpp_vot_fcuda.pt");
+       trackmodel= torch::jit::load( "../model/VOT/siamfcpp_vot_tcuda.pt");
     }
 
       model.to(dvc);
@@ -96,13 +105,13 @@ return t;
 
 
 }
-cv::Rect siamfcpp::cxywh2xywh(cv::Rect roi) {
+cv::Rect siamfcpp::cxywh2xywh(std::vector<float> roi) {
 
 
-    float x0=roi.x;
-    float x1=roi.y;
-    float x2=roi.width;
-    float x3=roi.height;
+    float x0=roi[0];
+    float x1=roi[1];
+    float x2=roi[2];
+    float x3=roi[3];
  cv::Rect  list( x0 - (x2-1) / 2, x1 -
                             (x3 - 1) / 2, x2, x3
 
@@ -214,7 +223,7 @@ if(i>=m.cols)
 
 }
 */
-cv::Rect siamfcpp::update( cv::Mat frame){
+cv::Rect siamfcpp::update( cv::Mat frame,float &scores){
 
 
 /*
@@ -229,7 +238,7 @@ cv::Rect siamfcpp::update( cv::Mat frame){
   target_pos_prior=target_pos;
   target_sz_prior=target_sz;
 
-return track(frame,target_pos_prior,target_sz_prior,features);
+return track(frame,target_pos_prior,target_sz_prior,features,scores);
 
 
 
@@ -237,11 +246,16 @@ return track(frame,target_pos_prior,target_sz_prior,features);
 
 cv::Rect siamfcpp::track( cv::Mat frame,std::vector<float> target_pos1,
             std::vector<float> target_sz1,
-            torch::List<torch::Tensor>  features,
+            torch::List<torch::Tensor>  features,float& scores,
             bool   update_state ){
 float scale_x=0;
-cv::Mat im_x_crop= get_crop(frame,target_pos1,target_sz1,z_size,x_size,scale_x,avg_chans,context_amount).clone();
+cv::Mat im_x_crop;
 
+
+
+ im_x_crop= get_crop(frame,target_pos1,target_sz1,z_size,x_size,scale_x,avg_chans,context_amount).clone();
+
+  //std::cout<<"scale_x"<<scale_x<<std::endl;
   torch::Tensor te=         Mat2tensor(im_x_crop);
 
 
@@ -269,6 +283,7 @@ cv::Mat im_x_crop= get_crop(frame,target_pos1,target_sz1,z_size,x_size,scale_x,a
              torch::Tensor box_wh=   xyxy2cxywh(box.to(dvc));
 
 
+
    /*
     *   box = tensor_to_numpy(box[0])
         score = tensor_to_numpy(score[0])[:, 0]
@@ -290,17 +305,23 @@ best_pscore_id=rv[0].to(dvc);
 int best_id=best_pscore_id.item<int>();
 pscore=rv[1].to(dvc);
 penalty=rv[2].to(dvc);
-cv::Rect rc= postprocess_box(best_id,score,box_wh,target_pos1,target_sz1,scale_x,x_size,penalty);
+std::vector<float> rc= postprocess_box(best_id,score,box_wh,target_pos1,target_sz1,scale_x,x_size,penalty);
 //std::cout<<"bestid "<<best_id<<std::endl;
 //std::cout<<"rc "<<rc<<std::endl;
 rc=restrict_box(rc);
+scores=pscore[best_id].item<float>();
+pr_socres=scores;
 //update state
-target_pos[0]=rc.x;
-target_pos[1]=rc.y;
-target_sz[0]=rc.width;
-target_sz[1]=rc.height;
+if(pr_socres>0.3){
+target_pos[0]=rc[0];
+target_pos[1]=rc[1];
+target_sz[0]=rc[2];
+target_sz[1]=rc[3];
+}
 cv::Rect rr= cxywh2xywh(rc);
 //std::vector<float> rr1=xywh2xyxy
+
+//std::cout<<"scores"<<scores<<std::endl;
 return rr;
 
 }
@@ -351,13 +372,13 @@ std::vector<torch::Tensor> siamfcpp::postprocess_score( torch::Tensor score,
 
 
 }
-cv::Rect siamfcpp::postprocess_box(int best_pscore_id,
+std::vector<float> siamfcpp::postprocess_box(int best_pscore_id,
                                  torch::Tensor score,
                                  torch::Tensor box_wh,
                                   std::vector<float> target_pos1,
                                   std::vector<float> target_sz1,
                                   float scale_x,
-                                 float x_size,
+                                 float x_size1,
                                   torch::Tensor penalty
                                  ){
 // std::cout<<"box_wh"<<box_wh.sizes()<<std::endl;
@@ -366,33 +387,33 @@ cv::Rect siamfcpp::postprocess_box(int best_pscore_id,
 
 
        torch::Tensor  lr = penalty[best_pscore_id] * score[best_pscore_id] * test_lr;
-       torch::Tensor  res_x = pred_in_crop[0] + target_pos1[0] - (int)(x_size / 2) / scale_x;
-       torch::Tensor       res_y = pred_in_crop[1] + target_pos1[1] - (int)(x_size / 2) / scale_x;
+       torch::Tensor  res_x = pred_in_crop[0] + target_pos1[0] - (int)(x_size1 / 2) / scale_x;
+       torch::Tensor       res_y = pred_in_crop[1] + target_pos1[1] - (int)(x_size1 / 2) / scale_x;
        torch::Tensor    res_w = target_sz1[0] * (1 - lr) + pred_in_crop[2] * lr;
        torch::Tensor    res_h = target_sz1[1] * (1 - lr) + pred_in_crop[3] * lr;
 
        // np.array([res_x, res_y])
            //  np.array([res_w, res_h])
 
-           cv::Rect newrect(res_x.item<float>(),res_y.item<float>(),res_w.item<float>(),res_h.item<float>());
-           return newrect;
+          std::vector<float> vec={res_x.item<float>(),res_y.item<float>(),res_w.item<float>(),res_h.item<float>()};
+           return vec;
 
 }
-cv::Rect  siamfcpp::restrict_box(cv::Rect tragrect){
+std::vector<float>  siamfcpp::restrict_box(std::vector<float> tragrect){
 
-       tragrect.x = fmax(0, fmin(im_w, tragrect.x));
-          tragrect.y = fmax(0, fmin(im_h,  tragrect.y));
-          tragrect.width = fmax(min_w,
-                            fmin(im_w,  tragrect.width ));
-          tragrect.height= fmax(min_h,
-                            fmin(im_h, tragrect.height));
+       tragrect[0] = fmax(0, fmin(im_w, tragrect[0]));
+          tragrect[1] = fmax(0, fmin(im_h, tragrect[1]));
+          tragrect[2] = fmax(min_w,
+                            fmin(im_w, tragrect[2] ));
+          tragrect[3]= fmax(min_h,
+                            fmin(im_h, tragrect[3]));
           return tragrect;
 
 }
 
 
 
-cv::Mat siamfcpp::get_crop(cv::Mat im, std::vector<float> target_pos, std::vector<float> target_sz,const int z_size,const int x_size,float &scale ,cv::Scalar avg_chans,float context_amount ){
+cv::Mat siamfcpp::get_crop(cv::Mat im, std::vector<float> target_pos, std::vector<float> target_sz,const int z_size1,const int x_size1,float &scale ,cv::Scalar avg_chans,float context_amount ){
    /*
     Returns
       -------
@@ -430,15 +451,15 @@ cv::Mat siamfcpp::get_crop(cv::Mat im, std::vector<float> target_pos, std::vecto
 
     float   s_crop = sqrt(wc * hc);
   int output_size=0;
-     scale=z_size / s_crop;
-    if (x_size == 0)
+     scale=z_size1 / s_crop;  //127/
+    if (x_size1 == 0)
     {
-      output_size = z_size;
-    s_crop = z_size / scale;
+      output_size = z_size1;
+    s_crop = z_size1 / scale;
      }else
     {
-     output_size=x_size;
-       s_crop = x_size / scale;
+     output_size=x_size1;//303
+       s_crop = x_size1 / scale; //303/
     }
 
 cv::Mat im_crop=get_subwindow_tracking(im,target_pos,output_size,round(s_crop),avg_chans);
@@ -451,6 +472,7 @@ return im_crop ;
 
 
 }
+//   tar_pos,303, 303/
 cv::Mat siamfcpp::get_subwindow_tracking(cv::Mat im,
                                std::vector<float> pos,
                              float  model_sz,
@@ -502,20 +524,29 @@ cv::Mat siamfcpp::get_subwindow_tracking(cv::Mat im,
 // warpAffine transform matrix
 float M_13 = crop_xyxy[0].item<float>();; //0维切片
 float M_23 = crop_xyxy[1].item<float>();
-float M_11 = ((crop_xyxy[2] - M_13) / (model_sz - 1)).item<float>();
-float M_22 = ((crop_xyxy[3] - M_23) / (model_sz - 1)).item<float>();
+float M_11 = ((crop_xyxy[2] - M_13) / (model_sz - 1)).item<float>(); //w/303   缩放系数 a
+float M_22 = ((crop_xyxy[3] - M_23) / (model_sz - 1)).item<float>();//h/303
 
 
 std::vector<float> ten={M_11,0,M_13,0,M_22,
                                 M_23};
+
+std::vector<float> ten_pure={1,0,1,0,1,
+                                1};
+
 torch::Tensor mat2x3 =torch::tensor(ten).reshape({2,3}).to(dvc);
-//std::cout<<"mat2x3"<<mat2x3<<std::endl;
 cv::Mat im_patch ;
+
+
+
+//std::cout<<"mat2x3"<<mat2x3<<std::endl;
+
 cv::warpAffine(im,im_patch,
                         tensor2Mat(mat2x3) , cv::Size(model_sz, model_sz),
                         cv::INTER_LINEAR | cv::WARP_INVERSE_MAP,
                          cv::BORDER_CONSTANT,
                         avg_chans);
+
 cv::imshow("warpAffine",im_patch);
 return im_patch;
 }

@@ -21,15 +21,15 @@ int main(int argc, char *argv[])
 
 */
   //  testpt testp(nullptr,torch::DeviceType::CUDA);
-siamfcpp  siamfcpp(torch::DeviceType::CPU);
+siamfcpp  siamfcpp(torch::DeviceType::CUDA);
 
 
- cv::VideoCapture   vs = cv::VideoCapture("../video/video.avi");
+ cv::VideoCapture   vs = cv::VideoCapture("../video/car.mp4");
 
   bool  frst = true;
   cv::Mat frame ;
         // ;
-
+   float scores=0;
   float fps_c=0;
     int c=0;
     while ( vs.read(frame)){
@@ -60,7 +60,7 @@ c++;
 
                  int start =cv::getTickCount();
 
-                cv::Rect roi=  siamfcpp.update(frame);
+                cv::Rect roi=  siamfcpp.update(frame,scores);
                 int  end =cv::getTickCount();
                cv::Mat show_frame = frame.clone();
                 float cout=1/((end-start)/cv::getTickFrequency());
@@ -69,13 +69,23 @@ c++;
 
                 cv::putText(show_frame,
                            "FPS "+ std::to_string( cout), cv::Point(128, 20),
-                            cv::FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255),
+                            cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(0, 0, 255),
                            1);
 
-
+if(scores<=0.3)
+{
+    cv::putText(show_frame,
+               "LOSS ", cv::Point(roi.x, roi.y-8),
+                cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 0),
+               1);
+    cv::rectangle(show_frame, roi ,
+                  cv::Scalar(255, 0,0),5);
+}
+else
+{
                 cv::rectangle(show_frame, roi ,
                               cv::Scalar(0, 255,0),3);
-
+}
 
 
                 cv::imshow("window_name2", show_frame);
