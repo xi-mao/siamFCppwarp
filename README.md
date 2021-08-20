@@ -11,7 +11,9 @@ test on GTX1660 CUDA 11.1
 2.Gpu(FPS 96)
 
 
-[GPU_implement](https://user-images.githubusercontent.com/51977158/130018412-2de16c33-b5a8-4e3e-974d-909031b1700d.mp4)
+[GPU_implement](
+https://user-images.githubusercontent.com/51977158/130159650-60574617-cc02-44d2-89eb-438c85dffc4b.mp4
+)
 
 # pre_model trans python-libtorch
 [baiduwangpan code:9m6d](https://pan.baidu.com/s/1Th7M6hQgGyKpe9u4ZpWxFA)
