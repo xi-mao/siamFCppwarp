@@ -42,7 +42,7 @@ file(GLOB_RECURSE sourcefile
 set(PROJECT_SOURCES
 
         main.cpp
-        qml.qrc
+
         ${sourcefile}
 )
 add_executable(siamFCppwarp

@@ -29,7 +29,7 @@ cv::Mat  im_z_crop;
     torch::DeviceType dvc;
 
     float pr_socres=0;
-
+   float   s_crop_rc;//record s_crop
 
    void ini( cv::Mat frame,cv::Rect roi);
    cv::Rect update( cv::Mat frame,float &scores);
@@ -123,8 +123,8 @@ protected:
    torch::List<torch::Tensor> zf;
    torch::Tensor anchors;
    torch::Tensor window;
-   int  im_w;
-  int im_h;
+   int  im_w;//image  width
+  int im_h;  // image height
 };
 
 #endif // SIAMFCPP_H

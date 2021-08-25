@@ -178,7 +178,7 @@ torch::Tensor hannwindow = hann_window(score_size);
 window=torch::outer(hannwindow,hannwindow).to(dvc);
 window=window.reshape(-1);
 
- calculate_s_z();
+ //calculate_s_z();
 
 /*
 torch::Tensor z_crop= get_subwindow(image,z_size,Sz);
@@ -193,7 +193,7 @@ std::cout<<output.size()<<std::endl;
  im_z_crop= get_crop(frame,target_pos,target_sz,z_size,0,scale,avg_chans,context_amount);
 
   torch::Tensor te=         Mat2tensor(im_z_crop).to(dvc);
-
+std::cout<<"input_inisize"<<te.sizes()<<std::endl;
 features = model.forward({te}).toTensorList();
 //std::cout<<"features"<<features.size()<<std::endl;
 
@@ -255,9 +255,9 @@ cv::Mat im_x_crop;
 
  im_x_crop= get_crop(frame,target_pos1,target_sz1,z_size,x_size,scale_x,avg_chans,context_amount).clone();
 
-  //std::cout<<"scale_x"<<scale_x<<std::endl;
-  torch::Tensor te=         Mat2tensor(im_x_crop);
 
+  torch::Tensor te=         Mat2tensor(im_x_crop);
+std::cout<<"im_x_crop"<<te.sizes()<<std::endl;
 
   torch::Tensor features1=features[0];
 
@@ -312,12 +312,17 @@ rc=restrict_box(rc);
 scores=pscore[best_id].item<float>();
 pr_socres=scores;
 //update state
-if(pr_socres>0.3){
+if(pr_socres>AC_SCORE){
 target_pos[0]=rc[0];
 target_pos[1]=rc[1];
 target_sz[0]=rc[2];
 target_sz[1]=rc[3];
+}else
+{
+
+
 }
+
 cv::Rect rr= cxywh2xywh(rc);
 //std::vector<float> rr1=xywh2xyxy
 
@@ -454,14 +459,14 @@ cv::Mat siamfcpp::get_crop(cv::Mat im, std::vector<float> target_pos, std::vecto
      scale=z_size1 / s_crop;  //127/
     if (x_size1 == 0)
     {
-      output_size = z_size1;
-    s_crop = z_size1 / scale;
+      output_size = z_size1;//127
+    s_crop = z_size1 / scale;  //s_crop 目标大小 target size
      }else
     {
      output_size=x_size1;//303
-       s_crop = x_size1 / scale; //303/
+       s_crop = x_size1 / scale; //303  *
     }
-
+s_crop_rc=round(s_crop);
 cv::Mat im_crop=get_subwindow_tracking(im,target_pos,output_size,round(s_crop),avg_chans);
 
 
@@ -524,21 +529,27 @@ cv::Mat siamfcpp::get_subwindow_tracking(cv::Mat im,
 // warpAffine transform matrix
 float M_13 = crop_xyxy[0].item<float>();; //0维切片
 float M_23 = crop_xyxy[1].item<float>();
-float M_11 = ((crop_xyxy[2] - M_13) / (model_sz - 1)).item<float>(); //w/303   缩放系数 a
-float M_22 = ((crop_xyxy[3] - M_23) / (model_sz - 1)).item<float>();//h/303
+float M_11 = ((crop_xyxy[2] - M_13) / (model_sz - 1)).item<float>(); //w/(303-1)   original_sz/303缩放系数 a
+float M_22 = ((crop_xyxy[3] - M_23) / (model_sz - 1)).item<float>();//h/(303-1)
 
 
 std::vector<float> ten={M_11,0,M_13,0,M_22,
                                 M_23};
+std::cout<<"M_11"<< M_11<<std::endl;
+std::cout<<"M_13"<< M_13<<std::endl;
+std::cout<<"M_22"<< M_22<<std::endl;
+std::cout<<"M_23"<< M_23<<std::endl;
 
-std::vector<float> ten_pure={1,0,1,0,1,
-                                1};
-
-torch::Tensor mat2x3 =torch::tensor(ten).reshape({2,3}).to(dvc);
+/*
+ a=scale*cos0  b=scale *sin0
+ a 0 (1-a)*center.x
+ 0 a  (1-a)*center.y
+ */
+torch::Tensor mat2x3 =torch::tensor(ten).reshape({2,3}).to(dvc);//calculate
 cv::Mat im_patch ;
 
 
-
+cv::Mat im_patch_test ;
 //std::cout<<"mat2x3"<<mat2x3<<std::endl;
 
 cv::warpAffine(im,im_patch,
@@ -547,6 +558,12 @@ cv::warpAffine(im,im_patch,
                          cv::BORDER_CONSTANT,
                         avg_chans);
 
+cv::warpAffine(im,im_patch_test,
+                        tensor2Mat(mat2x3) , cv::Size(),
+                        cv::INTER_LINEAR | cv::WARP_INVERSE_MAP,
+                         cv::BORDER_CONSTANT,
+                        avg_chans);
+cv::imshow("warpAffinetest",im_patch_test);
 cv::imshow("warpAffine",im_patch);
 return im_patch;
 }
